@@ -4,7 +4,7 @@ The RIDGES data is freely available for [download](https://www.linguistik.hu-ber
 
 ## Preprocessing
 
-Download the data, create training/development samples and convert the files to a tsv format as shown in the example files (see folder ridges_train):
+Download the data, create training/development/test samples and convert the files to a tsv format as shown in the example files (see folder ridges_train):
 
 ```
 Col1:token_id   Col2:word_form  Col3:POS
@@ -13,15 +13,16 @@ Col1:token_id   Col2:word_form  Col3:POS
 
 Note that the columns are tab-separated and that there is no newline between the sentences.
 
-The files need to be positioned in the ridges_train folder, with the names ```train.tsv``` and ```dev.tsv```.
+The files need to be positioned in the ridges_train folder, with the names ```train.tsv, dev.tsv``` and ```test.tsv```.
 
 Alternatively, you can adapt the path to the folder in the config files. The input filenames are hard-coded and need to be changed in the source code.
 
 
 ## Corpus reference
 
+```
 Lüdeling Anke, Odebrecht Carolin, Krause Thomas, Schnelle Gohar, Fischer Catharina (2020); RIDGES Herbology (Version 9.0); Humboldt-Universität zu Berlin; Homepage: http://korpling.org/ridges/; DOI: https://doi.org/10.34644/laudatio-dev-PySSCnMB7CArCQ9CNKFY
-
+```
 
 ## License
 
