@@ -1,0 +1,34 @@
+
+button[kind="tertiary"] {
+    background-color: #c1e2eb;
+    color: #656f7a;
+}
+
+/* horizontal separator */
+.header-divider {
+    border-top: 2px solid #ddd;
+    margin: 0.5rem 0 1rem 0;
+}
+
+/* fixed row height */
+.fixed-row {
+    display: flex;
+    align-items: center;
+    min-height: 110px;
+}
+
+div[role="radiogroup"] {
+    gap: 2rem;
+}
+
+/* color radio buttons by column */
+div[data-testid="column"]:nth-of-type(2) input { accent-color: #1f77b4; } /* econ left */
+div[data-testid="column"]:nth-of-type(3) input { accent-color: #d62728; } /* econ right */
+div[data-testid="column"]:nth-of-type(4) input { accent-color: #2ca02c; } /* TAN */
+div[data-testid="column"]:nth-of-type(5) input { accent-color: #9467bd; } /* GAL */
+
+/* reduce radio padding */
+div[role="radiogroup"] > label {
+    padding: 0.25rem 0 !important;
+}
+
