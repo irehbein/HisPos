@@ -8,7 +8,12 @@ Download the data, create training/development/test samples and convert the file
 
 ```
 Col1:token_id   Col2:word_form  Col3:POS
-...
+1               Auch            ADV
+2               ist             VAFIN
+3               Knoblauch       NN
+4               besonders       ADV
+5               böse            ADJD
+...		...		...
 ```
 
 Note that the columns are tab-separated and that there is no newline between the sentences.
