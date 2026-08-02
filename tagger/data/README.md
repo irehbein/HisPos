@@ -20,12 +20,10 @@ Alternatively, you can adapt the path to the folder in the config files. The inp
 
 ## Corpus reference
 
-```
 Lüdeling Anke, Odebrecht Carolin, Krause Thomas, Schnelle Gohar, Fischer Catharina (2020); 
 RIDGES Herbology (Version 9.0); Humboldt-Universität zu Berlin; 
 Homepage: http://korpling.org/ridges/; 
 DOI: https://doi.org/10.34644/laudatio-dev-PySSCnMB7CArCQ9CNKFY
-```
 
 ## License
 
