@@ -24,6 +24,8 @@ The repository includes:
 * the source code for prompting the LLMs to correct PoS errors in the data
 * the streamlit app used to manually correct PoS errors, based on the predictions of the taggers.
 
+<br/><br/>
+
 ## PoS Tagger
 
 ### Dependencies
@@ -64,6 +66,13 @@ Change to the ```tagger``` folder and call the bash script ```run_train.sh```.
 Change to the ```tagger``` folder and call the bash script ```run_predict.sh```.
 
 
+### Creating ensemble tags
+
+We train a number of taggers on different samples from the RIDGES corpus (for details please refer to our paper). Then we take the majority vote from the tagger ensemble and add it as POS2 to our data (POS1 has been predicted by the [Cascaded Analysis Broker (CAB)](https://deutschestextarchiv.de/public/cab/)).
+The so created files are input for the manual PoS Correction and for the Annotation Error Correction experiments (see below).
+
+<br/><br/>
+
 ## Manual PoS Correction
 
 The folder ```streamlit_app``` contains an annotation interface for PoS correction.
@@ -92,7 +101,7 @@ SID     TID     TOKEN   POS1    POS2
 
 Please note that there are no newlines between sentences. For an example file, see:
 ```
-HisPos/streamlit_app/data/test.tsv
+HisPos/streamlit_app/data/input/test.tsv
 ```
 
 When the two tags (POS1, POS2) disagree, then the row will be marked with a MISMATCH tag. This makes it easy to identify potential errors and to correct them in an efficient manner.
@@ -103,9 +112,69 @@ You can use the ```Previous/Next``` buttons to navigate or you can insert the se
 
 You can save the file, using the ```Save``` button. The saved file has an additional column ```GOLDPOS``` with the corrected PoS tag.
 You can also upload the saved file and continue with the error correction.
- 
+
+
+### Manually corrected goldstandard
+
+We release the manually corrected documents that we use for evaluating our Annotation Error Correction approach. You can find the four files in the folder ```HisPos/streamlit_app/data/gold/```.
+
+Please note that this is a preliminary version of a more comprehensive dataset, which will be published once it is complete. The final version of the data may therefore differ from this version.
+
+See here for more information on the project: 
+[Referenzielle Praxis im Wandel: Das Pronomen man in der Diachronie des Deutschen](https://tp2.forschungsgruppe-pronomen.de/)
+
+
+
+<br/><br/>
+
+## Annotation Error Correction
+
+### Prerequisites
+
+You need to configure the following files:
+
+* secrets.json
+  * Contains your Huggingface API key and the HF_HOME environment variable (only needed when using local models) and your API key and URL for accessing the LLM (when using remote services).
+
+* config/pos-llm-baseline.config
+* config/pos-llm-correct.config
+    * adapt model_name
+    * adapt paths to input data (dataset_dir) and output folder (result_dir)
+
+For automatic error correction, you also need to specify the prompt_type (```config/pos-llm-correct.config```). We provide templates for the following error types:
+* FM_OTHER
+* NE_OTHER
+* VVFIN_OTHER
+* PTKZU_OTHER
+* ADV_OTHER
+* GENERIC      # prompt the LLM to correct all tags marked as errors
+
+For details, please refer to our paper.
+
+
+
+### Baseline
+
+Following a reviewer request, we added a baseline where we use an LLM as tagger to predict PoS tags for each wordform in our data in a zero-shot setting. Baseline accuracy for ```Gpt-oss-120B``` on our test set is 69.2. For comparison, the accuracy for the DTA predictions is 83.8 and the majority vote over the tags predicted by the ensemble tagger trained on RIDGES is 88.9.
+
+Running the baseline:
+
+```cd HisPos/aec
+
+python ./src/pos_llm_baseline.py ./config/pos-llm-baseline.config
+```
+
+### Annotation Error Correction
+
+You can run the error correction script by calling:
+
+```
+./src/pos_llm_correct.py ./config/pos-llm-correct.config
+```
+
 
 ## License
 
 This project is licensed under the [MIT License](https://opensource.org/license/mit) - see the LICENSE file for details.
  
+
