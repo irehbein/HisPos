@@ -61,7 +61,9 @@ def prepare_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     validate_input_columns(df)
 
     if "GOLDPOS" not in df.columns:
-        df.insert(0, "GOLDPOS", None)
+        df.insert(0, "GOLDPOS", "_")
+        #df["GOLDPOS"] = df["GOLDPOS"].where(df["GOLDPOS"].notna(), None)
+
     else:
         df["GOLDPOS"] = df["GOLDPOS"].where(df["GOLDPOS"].notna(), None)
 
@@ -102,7 +104,7 @@ def fill_default_goldpos(sentence_df: pd.DataFrame) -> pd.DataFrame:
     """
     sentence_df = sentence_df.copy()
 
-    empty_gold = sentence_df["GOLDPOS"].isna() | (sentence_df["GOLDPOS"] == "")
+    empty_gold = sentence_df["GOLDPOS"].isna() | (sentence_df["GOLDPOS"] == "") | (sentence_df["GOLDPOS"] == "_")
     same_pos = sentence_df["POS1"] == sentence_df["POS2"]
     diff_pos = sentence_df["POS1"] != sentence_df["POS2"]
 
@@ -267,7 +269,8 @@ with nav_col1:
         "⬅ Previous",
         on_click=go_previous,
         disabled=(sid_index == 0),
-        use_container_width=True,
+        width='stretch',
+        #use_container_width=True,
     )
 
 with nav_col2:
@@ -278,7 +281,8 @@ with nav_col3:
         "Next ➡",
         on_click=go_next,
         disabled=(sid_index == len(sid_list) - 1),
-        use_container_width=True,
+        width='stretch',
+        #use_container_width=True,
     )
 
 selected_sid = st.selectbox(
@@ -303,7 +307,8 @@ edited_df = st.data_editor(
     hide_index=True,
     column_order=EDITOR_COLUMNS,
     disabled=DISABLED_COLUMNS,
-    use_container_width=True,
+    #use_container_width=True,
+    width='stretch',
     key=f"editor_sid_{sid}",
 )
 

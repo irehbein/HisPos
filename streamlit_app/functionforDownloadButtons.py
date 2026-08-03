@@ -8,7 +8,7 @@ import re
 import importlib.util
 
 """
-Copied from: https://github.com/streamlit/example-app-csv-wrangler.
+See: https://github.com/streamlit/example-app-csv-wrangler.
 """
 
 def import_from_file(module_name: str, filepath: str):
