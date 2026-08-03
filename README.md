@@ -19,59 +19,14 @@ In the paper, we focus on the problem of part-of-speech tagging of Early New Hig
 German documents and evaluate methods to reduce human effort. Specifically, we present a pipeline and annotation interface that supports manual post-correction of automatically predicted tags and show that using open-weight LLMs for post-correction of PoS tags is feasible at least for some error types, when breaking
 down the task into well-defined problems.
 
-The repository includes: 
-* the source code for the PoS tagger used to identify potential errors in the PoS predictions.
-* the source code for prompting the LLMs to correct PoS errors in the data
-* the streamlit app used to manually correct PoS errors, based on the predictions of the taggers.
+This repository includes: 
+* the streamlit app used to manually correct PoS errors, based on the predictions of the taggers,
+* the source code for the PoS tagger used to identify potential errors in the PoS predictions,
+* the source code for prompting the LLMs to correct PoS errors in the data.
 
 <br/><br/>
 
-## PoS Tagger
 
-### Dependencies
-
-See ```requirements.txt``` in the tagger folder.
-
-### Data
-
-For training, we use samples from the RIDGES corpus:
-
-Lüdeling Anke, Odebrecht Carolin, Krause Thomas, Schnelle Gohar, Fischer Catharina (2020);
-RIDGES Herbology (Version 9.0); Humboldt-Universität zu Berlin;
-Homepage: http://korpling.org/ridges/;
-DOI: https://doi.org/10.34644/laudatio-dev-PySSCnMB7CArCQ9CNKFY
-
-For details how to obtain the data, please refer to the readme file in the folder ```tagger/data/```.
-
-### Configuration 
-
-Please check the files in the ```config``` folder and adapt the paths.
-
-```
-eval_on_dev         # use the file dev.tsv for evaluation
-
-model_dir           # folder where the model will be saved
-
-result_dir          # folder where the tagger output will be saved
-```
-
-
-### Training a PoS tagger
-
-Change to the ```tagger``` folder and call the bash script ```run_train.sh```.
-
-
-### Predicting PoS tags
-
-Change to the ```tagger``` folder and call the bash script ```run_predict.sh```.
-
-
-### Creating ensemble tags
-
-We train a number of taggers on different samples from the RIDGES corpus (for details please refer to our paper). Then we take the majority vote from the tagger ensemble and add it as POS2 to our data (POS1 has been predicted by the [Cascaded Analysis Broker (CAB)](https://deutschestextarchiv.de/public/cab/)).
-The so created files are input for the manual PoS Correction and for the Annotation Error Correction experiments (see below).
-
-<br/><br/>
 
 ## Manual PoS Correction
 
@@ -101,7 +56,7 @@ SID     TID     TOKEN   POS1    POS2
 
 Please note that there are no newlines between sentences. For an example file, see:
 ```
-HisPos/streamlit_app/data/input/test.tsv
+HisPos/data/input/test.tsv
 ```
 
 When the two tags (POS1, POS2) disagree, then the row will be marked with a MISMATCH tag. This makes it easy to identify potential errors and to correct them in an efficient manner.
@@ -116,13 +71,84 @@ You can also upload the saved file and continue with the error correction.
 
 ### Manually corrected goldstandard
 
-We release the manually corrected documents that we use for evaluating our Annotation Error Correction approach. You can find the four files in the folder ```HisPos/streamlit_app/data/gold/```.
+We release the manually corrected documents that we use for evaluating our Annotation Error Correction approach. You can find the four files in the folder ```HisPos/data/gold/```.
 
 Please note that this is a preliminary version of a more comprehensive dataset, which will be published once it is complete. The final version of the data may therefore differ from this version.
 
 See here for more information on the project: 
 [Referenzielle Praxis im Wandel: Das Pronomen man in der Diachronie des Deutschen](https://tp2.forschungsgruppe-pronomen.de/)
 
+
+
+<br/><br/>
+
+## PoS Tagger
+
+### Dependencies
+
+See ```requirements.txt``` in the tagger folder.
+
+### Data
+
+For training, we use samples from the RIDGES corpus:
+
+Lüdeling Anke, Odebrecht Carolin, Krause Thomas, Schnelle Gohar, Fischer Catharina (2020);
+RIDGES Herbology (Version 9.0); Humboldt-Universität zu Berlin;
+Homepage: http://korpling.org/ridges/;
+DOI: https://doi.org/10.34644/laudatio-dev-PySSCnMB7CArCQ9CNKFY
+
+For details how to obtain the data, please refer to the readme file in the folder ```tagger/data/```.
+
+
+### Configuration 
+
+Please check the files in the ```config``` folder and adapt the paths.
+
+```
+eval_on_dev         # use the file dev.tsv for evaluation
+
+model_dir           # folder where the model will be saved
+
+result_dir          # folder where the tagger output will be saved
+```
+
+
+### Training a PoS tagger
+
+Change to the ```tagger``` folder and call the bash script ```run_train.sh```.
+
+
+
+
+
+
+### Predicting PoS tags
+
+Once the tagger is trained, we can apply it to our data to predict new tags.
+
+Please make sure that to configure the path to the model you plan to use in the config file. Also check the path to the input and output folder.
+
+The input to the tagger (our four files with DTA-predicted PoS tags) are in the folder ```tagger/tagger_input/```.
+
+Change to the ```tagger``` folder and call the bash script ```run_predict.sh```.
+
+The output will be written to the folder specified in the config file. 
+
+
+
+### Creating the ensemble tags
+
+We train a number of taggers on different samples from the RIDGES corpus (for details please refer to our paper). Then we take the majority vote from the tagger ensemble and add it as POS2 to our data (POS1 has been predicted by the [Cascaded Analysis Broker (CAB)](https://deutschestextarchiv.de/public/cab/)).
+The so created files are input for the manual PoS Correction and for the Annotation Error Correction experiments (see below).
+
+We provide the tagged files for each of the five models in the folder ```tagger_output``` (run1 - run5).
+
+The script ```merge_predicted_tags.py``` reads in the DTA predictions from the files in the input and the model predictions from the ensemble and creates two versions of the files:
+
+1. a version with all predictions by the different taggers (*.merged.tsv)
+2. a version with two predictions (the DTA tag and the majority vote of the ensemble) (*.merged_mv.tsv)
+
+The files are stored in the ```tagger_output``` folder.
 
 
 <br/><br/>

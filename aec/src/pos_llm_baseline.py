@@ -94,14 +94,14 @@ def process_test_set(
             logging.info("Processing {}".format(prompt_type))
 
             # we want to predict pos labels for each token
-
             for i, item in enumerate(jsonl_data): 
                 prompt_batch = utils.get_baseline_batch(item, prompt_type)
                 prompt_batch = batch_inference(prompt_batch, client, model_name, technique=prompt_type)
                 jsonl_data[i]["predictions"] = prompt_batch[0]["prediction"]
 
-                # Save predictions to file after every 25th call
-                # to prevent data loss (in case of an unstable connection) 
+                # If you want to save predictions to file after every 25th call
+                # to prevent data loss (in case of an unstable connection),
+                # uncomment the next two lines. 
                 #if i%25 == 0:
                 #    utils.write_to_file(jsonl_data, outpath+str(i))
 

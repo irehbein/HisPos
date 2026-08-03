@@ -5,6 +5,140 @@ import json
 import pandas as pd
 from pathlib import Path 
 
+
+
+
+def get_test_batch(data: dict, error_type:str) -> list[dict]:
+    """ Takes a list of tokens, pos, and error tags to be corrected and an error type
+        and returns formatted prompts.
+
+    Args:
+        data (list[dict]): The data to be corrected  
+        prompt_type (str): Corresponds to a prompt template  
+
+    Returns:
+        list[dict]: Our prompt batch
+    """ 
+    prompt_batch = []  
+    tokens = data["token"]
+    token_idx = data["token_ids"]
+    pos = data["pos"]
+    alt_pos = data["error"]
+    error_ids = data["error_ids"]
+        
+    user_prompt = ""
+    system_prompt = ""
+        
+    for idx in error_ids:
+        # for each mismatch, get a formatted user prompt           
+        system_prompt = get_system_prompt(tokens, pos, alt_pos[idx], idx, error_type)
+        user_prompt = get_formatted_user_prompt(tokens, pos, alt_pos[idx], idx) 
+            
+        # append formatted prompt to prompt_batch
+        message = [
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+        ]
+        helper_dict = {
+                "token_id": idx,
+                "prompt_type":error_type,
+                "message": message
+        }
+        prompt_batch.append(helper_dict)
+
+    return prompt_batch
+
+
+
+
+
+def write_to_file(records: list[dict], outfile: str):
+    with open(outfile, "w") as out:
+        for item in records:
+            if "predictions" not in item:
+                item["predictions"] = []
+            out.write(json.dumps(item) + '\n')
+    return
+
+
+
+
+"""
+Takes a pandas dataframe and extracts sentences, based on token ids.
+Returns a list of dictionaries with format:
+{'token_ids':[], 'token':[], 'pos':[], 'error':[]}
+
+Input format (pandas dataframe):
+
+GOLDPOS SID     TID     TOKEN   POS1    POS2
+_       1       1       kurzer  ADJA    ADJA
+_       1       2       /       $(      $(
+_       1       3       doch    ADV     ADV
+ADJA    1       4       gründlicher     ADJD    ADJA
+_       1       5       Bericht NN      NN
+...     ...     ...     ...     ...     ... 
+"""
+def df2json(df: pd.DataFrame) -> list[dict]:
+    data = []
+    sids = list(df.SID)
+    tids = list(df.TID)
+    toks = list(df.TOKEN)
+    pos1 = list(df.POS1)
+    pos2 = list(df.POS2)
+    gold = list(df.GOLDPOS)
+    dic = {'sid': -1, 'token_ids':[], 'token':[], 'pos':[], 'error':[], 'gold':[]}
+
+    for i in range(len(sids)):
+        if tids[i] == 1:
+            if dic['pos'] != []:
+                data.append(dic)
+            # new sentence
+            dic = {'sid': sids[i], 'token_ids':[], 'token':[], 'pos':[], 'error':[], 'gold':[]}
+        dic['token_ids'].append(tids[i])
+        dic['token'].append(toks[i])
+        dic['pos'].append(pos1[i])
+        dic['gold'].append(gold[i])
+        
+        if pos1[i] != pos2[i]:
+            dic['error'].append(pos2[i])
+        else:
+            dic['error'].append("OK")
+    
+    # also get last sentence
+    if dic['pos'] != []:
+        data.append(dic)
+
+    return data
+
+
+
+
+def get_test_data(inpath: str) -> list[dict]:
+    """ Function to extract our test data
+
+    Args:
+        data source
+
+    Returns:
+        data: list[dict] 
+
+        [{'token_ids':[], 'token':[], 'pos':[], 'error':[]}]
+    """
+    # Open and read test data
+    jsonl_data = []
+    df = pd.read_csv(inpath, sep='\t', header=0)
+    jsonl_data += df2json(df)
+    print(f"Return jsonl data with {len(jsonl_data)} rows...")
+    return jsonl_data
+
+
+
     
 def get_system_prompt_baseline() -> str:
     return f"""
@@ -219,6 +353,7 @@ Antwort:
 """
 
 
+
 def get_formatted_user_prompt_baseline(tokens:dict) -> str:
 
     return f"""
@@ -273,137 +408,5 @@ def get_baseline_batch(data: dict, prompt_type:str) -> list[dict]:
     return prompt_batch
 
      
-
-
-
-def get_test_batch(data: dict, error_type:str) -> list[dict]:
-    """ Takes a list of tokens, pos, and error tags to be corrected and an error type
-        and returns formatted prompts.
-
-    Args:
-        data (list[dict]): The data to be corrected  
-        prompt_type (str): Corresponds to a prompt template  
-
-    Returns:
-        list[dict]: Our prompt batch
-    """ 
-    prompt_batch = []  
-    tokens = data["token"]
-    token_idx = data["token_ids"]
-    pos = data["pos"]
-    alt_pos = data["error"]
-    error_ids = data["error_ids"]
-        
-    user_prompt = ""
-    system_prompt = ""
-        
-    for idx in error_ids:
-        # for each mismatch, get a formatted user prompt           
-        system_prompt = get_system_prompt(tokens, pos, alt_pos[idx], idx, error_type)
-        user_prompt = get_formatted_user_prompt(tokens, pos, alt_pos[idx], idx) 
-            
-        # append formatted prompt to prompt_batch
-        message = [
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-        ]
-        
-        helper_dict = {
-                "token_id": idx,
-                "prompt_type":error_type,
-                "message": message
-        }
-        prompt_batch.append(helper_dict)
-
-    return prompt_batch
-
-
-
-
-"""
-Takes a pandas dataframe and extracts sentences, based on token ids.
-Returns a list of dictionaries with format:
-{'token_ids':[], 'token':[], 'pos':[], 'error':[]}
-
-Input format (pandas dataframe):
-
-GOLDPOS SID     TID     TOKEN   POS1    POS2
-_       1       1       kurzer  ADJA    ADJA
-_       1       2       /       $(      $(
-_       1       3       doch    ADV     ADV
-ADJA    1       4       gründlicher     ADJD    ADJA
-_       1       5       Bericht NN      NN
-...     ...     ...     ...     ...     ... 
-"""
-def df2json(df: pd.DataFrame) -> list[dict]:
-    data = []
-    sids = list(df.SID)
-    tids = list(df.TID)
-    toks = list(df.TOKEN)
-    pos1 = list(df.POS1)
-    pos2 = list(df.POS2)
-    gold = list(df.GOLDPOS)
-    dic = {'sid': -1, 'token_ids':[], 'token':[], 'pos':[], 'error':[], 'gold':[]}
-
-    for i in range(len(sids)):
-        if tids[i] == 1:
-            if dic['pos'] != []:
-                data.append(dic)
-            # new sentence
-            dic = {'sid': sids[i], 'token_ids':[], 'token':[], 'pos':[], 'error':[], 'gold':[]}
-        dic['token_ids'].append(tids[i])
-        dic['token'].append(toks[i])
-        dic['pos'].append(pos1[i])
-        dic['gold'].append(gold[i])
-        
-        if pos1[i] != pos2[i]:
-            dic['error'].append(pos2[i])
-        else:
-            dic['error'].append("OK")
-    
-    # also get last sentence
-    if dic['pos'] != []:
-        data.append(dic)
-
-    return data
-
-
-
-def get_test_data(inpath: str) -> list[dict]:
-    """ Function to extract our test data
-
-    Args:
-        data source
-
-    Returns:
-        data: list[dict] 
-
-        [{'token_ids':[], 'token':[], 'pos':[], 'error':[]}]
-    """
-    # Open and read test data
-    jsonl_data = []
-    df = pd.read_csv(inpath, sep='\t', header=0)
-    jsonl_data += df2json(df)
-    print(f"Return jsonl data with {len(jsonl_data)} rows...")
-    return jsonl_data
-
-
-
-def write_to_file(records: list[dict], outfile: str):
-    with open(outfile, "w") as out:
-        for item in records:
-            if "predictions" not in item:
-                item["predictions"] = []
-            out.write(json.dumps(item) + '\n')
-    return
-
-
-
 
 
